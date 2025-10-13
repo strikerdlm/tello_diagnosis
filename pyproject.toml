@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Comprehensive diagnostic toolkit for DJI Tello drones"
 readme = "README.md"
 authors = [
-    {name = "Daniel L. Malpica", email = "dlmalpica@me.com"}
+    {name = "Diego L. Malpica", email = "dlmalpica@me.com"}
 ]
 license = {text = "MIT"}
 requires-python = ">=3.8"

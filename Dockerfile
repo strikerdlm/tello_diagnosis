@@ -33,7 +33,7 @@ RUN pip install --upgrade pip setuptools wheel && \
 FROM python:3.11-slim
 
 # Set labels
-LABEL maintainer="Daniel L. Malpica <dlmalpica@me.com>"
+LABEL maintainer="Diego L. Malpica <dlmalpica@me.com>"
 LABEL description="DJI Tello Diagnostics Tool - Docker Container"
 LABEL version="1.0.0"
 

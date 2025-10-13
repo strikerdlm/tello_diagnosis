@@ -283,7 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👤 Author
 
-**Daniel L. Malpica** ([@strikerdlm](https://github.com/strikerdlm))
+**Diego L. Malpica** ([@strikerdlm](https://github.com/strikerdlm))
 
 - Email: dlmalpica@me.com
 - GitHub: [@strikerdlm](https://github.com/strikerdlm)

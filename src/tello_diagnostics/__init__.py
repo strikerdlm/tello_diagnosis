@@ -5,7 +5,7 @@ A comprehensive toolkit for monitoring and logging diagnostic data from DJI Tell
 """
 
 __version__ = "1.0.0"
-__author__ = "Daniel L. Malpica"
+__author__ = "Diego L. Malpica"
 __email__ = "dlmalpica@me.com"
 __license__ = "MIT"
 
