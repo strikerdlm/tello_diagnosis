@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  tello-diagnostics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tello-diagnostics:latest
+    container_name: tello-diagnostics
+    network_mode: host  # Required for Tello UDP communication
+    volumes:
+      # Mount data directory for logs
+      - ./data:/app/data:rw
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    # Override command for specific tools
+    # command: python -m tello_diagnostics.diagnostics
+
+  tello-logger:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tello-diagnostics:latest
+    container_name: tello-logger
+    network_mode: host
+    volumes:
+      - ./data:/app/data:rw
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python -m tello_diagnostics.logger --output /app/data/flight_log.csv --duration 300
+
+  tello-manual:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tello-diagnostics:latest
+    container_name: tello-manual
+    network_mode: host
+    volumes:
+      - ./data:/app/data:rw
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+    command: python -m tello_diagnostics.manual
+
+volumes:
+  data:
+    driver: local
+
