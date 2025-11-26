@@ -137,6 +137,23 @@ class TestTelloDiagnostics:
         captured = capsys.readouterr()
         assert "Not connected" in captured.out
 
+    def test_monitor_runs_for_duration(
+        self,
+        sample_telemetry: Dict[str, Any],
+    ) -> None:
+        """Test monitor fetches data for the specified duration."""
+        diagnostics = TelloDiagnostics(update_interval=0.1)
+        diagnostics.connected = True
+        diagnostics.get_diagnostics = MagicMock(return_value=sample_telemetry)
+        diagnostics.display_diagnostics = MagicMock()
+
+        with patch("tello_diagnostics.diagnostics.time") as mock_time:
+            mock_time.monotonic.side_effect = [0.0, 0.0, 0.2]
+            mock_time.sleep.return_value = None
+            diagnostics.monitor(duration=0.1)
+
+        diagnostics.display_diagnostics.assert_called_once_with(sample_telemetry)
+
     def test_disconnect_when_connected(self, mock_tello: MagicMock) -> None:
         """Test disconnect when connected."""
         diagnostics = TelloDiagnostics()

@@ -31,6 +31,7 @@ def mock_tello() -> MagicMock:
     mock.get_speed_x.return_value = 0
     mock.get_speed_y.return_value = 0
     mock.get_speed_z.return_value = 0
+    mock.query_speed.return_value = 0
     mock.get_acceleration_x.return_value = 0.0
     mock.get_acceleration_y.return_value = 0.0
     mock.get_acceleration_z.return_value = 0.0
