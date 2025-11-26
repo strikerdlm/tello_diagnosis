@@ -194,3 +194,46 @@ class TestTelloManualInterface:
         mock_tello.end.assert_called_once()
         assert not interface.connected
 
+    def test_programs_command_list(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Ensure the catalog is printed."""
+        interface = TelloManualInterface()
+
+        result = interface.execute_command("programs")
+
+        assert result is True
+        output = capsys.readouterr().out
+        assert "Available Flight Programs" in output
+
+    def test_programs_command_info(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Ensure detailed info renders without connection."""
+        interface = TelloManualInterface()
+
+        result = interface.execute_command("programs info square-dance")
+
+        assert result is True
+        output = capsys.readouterr().out
+        assert "Square Dance" in output
+
+    def test_programs_command_run(
+        self,
+        mock_tello: MagicMock,
+    ) -> None:
+        """Ensure `programs run` delegates to the runner."""
+        interface = TelloManualInterface()
+        interface.tello = mock_tello
+        interface.connected = True
+
+        mock_runner = MagicMock()
+        interface.program_runner = mock_runner
+
+        result = interface.execute_command("programs run square-dance")
+
+        assert result is True
+        mock_runner.execute.assert_called_once()
+

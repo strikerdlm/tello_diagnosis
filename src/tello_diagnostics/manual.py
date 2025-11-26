@@ -6,8 +6,15 @@ and reading diagnostic responses.
 """
 
 import sys
-from typing import Optional
+from typing import List, Optional
+
 from djitellopy import Tello
+
+from .flight_programs import (
+    FlightProgramLibrary,
+    FlightProgramRunner,
+    ProgramUploadError,
+)
 
 
 class TelloManualInterface:
@@ -48,6 +55,11 @@ SYSTEM COMMANDS:
   status           - Show current status
   exit/quit        - Exit program
 
+PROGRAM LIBRARY:
+  programs                 - List curated routines
+  programs info <slug>     - Show routine steps
+  programs run <slug>      - Upload + fly selected routine
+
 Examples:
   > up 50
   > battery
@@ -58,6 +70,8 @@ Examples:
         """Initialize manual interface."""
         self.tello: Optional[Tello] = None
         self.connected = False
+        self.program_library: FlightProgramLibrary = FlightProgramLibrary()
+        self.program_runner: FlightProgramRunner = FlightProgramRunner()
 
     def connect(self) -> bool:
         """
@@ -127,16 +141,18 @@ Examples:
         Returns:
             bool: False if should exit, True otherwise
         """
-        if not self.connected or self.tello is None:
-            print("Not connected to Tello")
-            return True
-
-        cmd = cmd.strip().lower()
+        cmd = cmd.strip()
         if not cmd:
             return True
 
-        parts = cmd.split()
+        normalized_cmd = cmd.lower()
+        parts = normalized_cmd.split()
         action = parts[0]
+
+        offline_allowed = {'exit', 'quit', 'help', 'programs'}
+        if (not self.connected or self.tello is None) and action not in offline_allowed:
+            print("Not connected to Tello")
+            return True
 
         try:
             # System commands
@@ -148,6 +164,9 @@ Examples:
 
             elif action == 'status':
                 self.show_status()
+
+            elif action == 'programs':
+                self._handle_programs_command(parts[1:])
 
             # Control commands
             elif action == 'takeoff':
@@ -299,6 +318,110 @@ Examples:
             finally:
                 self.connected = False
 
+    def _handle_programs_command(self, args: List[str]) -> None:
+        """
+        Entry point for the `programs` CLI command.
+
+        Args:
+            args: Remaining CLI tokens after 'programs'.
+        """
+        if not args or args[0] == 'list':
+            self._print_program_catalog()
+            return
+
+        subcommand = args[0]
+        if subcommand == 'info' and len(args) >= 2:
+            self._show_program_details(args[1])
+            return
+
+        if subcommand == 'run' and len(args) >= 2:
+            self._run_program(args[1])
+            return
+
+        print("Usage: programs [list|info <slug>|run <slug>]")
+
+    def _print_program_catalog(self) -> None:
+        """Display the available flight routines."""
+        print("\nAvailable Flight Programs")
+        print("-" * 80)
+        header = (
+            f"{'Slug':15s} | {'Title':20s} | {'Space(m)':9s} | "
+            f"{'Battery%':9s} | {'ETA(s)':6s}"
+        )
+        print(header)
+        print("-" * len(header))
+
+        for summary in self.program_library.list_programs():
+            print(
+                f"{summary['identifier']:15s} | "
+                f"{summary['title'][:20]:20s} | "
+                f"{summary['recommended_space_m']:9.1f} | "
+                f"{summary['min_battery_percent']:9d} | "
+                f"{summary['estimated_duration_seconds']:6.0f}"
+            )
+
+        print("\nUse 'programs info <slug>' for step-by-step details.")
+
+    def _show_program_details(self, slug: str) -> None:
+        """
+        Display step-by-step instructions for a selected program.
+
+        Args:
+            slug: Program identifier.
+        """
+        try:
+            program = self.program_library.get_program(slug)
+        except ProgramUploadError as exc:
+            print(str(exc))
+            return
+
+        print(f"\n{program.title} ({program.identifier})")
+        print("-" * 80)
+        print(program.objective)
+        print(f"- Recommended space: {program.recommended_space_m:.1f} m clear bubble")
+        print(f"- Minimum battery: {program.min_battery_percent}%")
+        print(f"- Estimated duration: {program.estimated_duration_seconds:.0f}s")
+
+        print("\nSteps:")
+        for index, step in enumerate(program.steps, start=1):
+            detail = step.description or step.command
+            if step.command == 'pause':
+                print(f"  {index:02d}. Hover {step.wait_seconds:.1f}s - {detail}")
+                continue
+
+            wait_suffix = ""
+            if step.wait_seconds > 0:
+                wait_suffix = f" + hold {step.wait_seconds:.1f}s"
+
+            print(f"  {index:02d}. {step.command} {step.args} - {detail}{wait_suffix}")
+
+    def _run_program(self, slug: str) -> None:
+        """
+        Execute a program on the connected drone.
+
+        Args:
+            slug: Program identifier.
+        """
+        if not self.connected or self.tello is None:
+            print("Connect to the Tello before running a program.")
+            return
+
+        try:
+            program = self.program_library.get_program(slug)
+        except ProgramUploadError as exc:
+            print(str(exc))
+            return
+
+        print(f"\nUploading '{program.title}' routine...")
+
+        def status_callback(message: str) -> None:
+            print(f"  {message}")
+
+        try:
+            self.program_runner.execute(self.tello, program, status_callback)
+            print("✓ Routine completed successfully.")
+        except ProgramUploadError as exc:
+            print(f"✗ Routine aborted: {exc}")
 
 def main() -> int:
     """Main entry point."""
