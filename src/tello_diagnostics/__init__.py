@@ -10,6 +10,14 @@ __email__ = "dlmalpica@me.com"
 __license__ = "MIT"
 
 from .diagnostics import TelloDiagnostics
+from .flight_programs import (
+    FlightProgram,
+    FlightProgramLibrary,
+    FlightProgramRunner,
+    FlightStep,
+    ProgramSummary,
+    ProgramUploadError,
+)
 from .logger import TelloDataLogger
 from .manual import TelloManualInterface
 
@@ -17,5 +25,11 @@ __all__ = [
     "TelloDiagnostics",
     "TelloDataLogger",
     "TelloManualInterface",
+    "FlightStep",
+    "FlightProgram",
+    "FlightProgramLibrary",
+    "FlightProgramRunner",
+    "ProgramSummary",
+    "ProgramUploadError",
 ]
 

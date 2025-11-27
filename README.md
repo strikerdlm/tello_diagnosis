@@ -15,6 +15,7 @@ A comprehensive, production-ready toolkit for connecting to DJI Tello drones and
 - **Real-time Telemetry Monitoring** - Live display of all drone sensors and status
 - **Data Logging** - CSV export for analysis and research
 - **Interactive Command Interface** - Manual control and testing
+- **Program Library Uploads** - One-click fun flight routines (Square Dance, Spiral Climb, Selfie Orbit, Zig-Zag Dash)
 - **Type-Safe** - Full type hints with strict mypy checking
 - **Well-Tested** - Comprehensive test suite with pytest
 - **Docker Support** - Fully containerized for easy deployment
@@ -104,6 +105,52 @@ python -m tello_diagnostics.manual
 - **Control:** `takeoff`, `land`, `up`, `down`, `left`, `right`, `forward`, `back`, `cw`, `ccw`, `flip`, `emergency`
 - **Read:** `battery`, `speed`, `time`, `temp`, `height`, `tof`, `baro`, `attitude`, `acceleration`, `state`
 - **System:** `help`, `status`, `exit`
+
+### 🎉 Program Library & Ready-to-Upload Code
+
+The manual GUI now ships with a curated set of "press play" routines so you can demo cool moves without writing new code live.
+
+#### Step-by-step from the GUI
+1. `tello-manual`
+2. Connect to the drone (press Enter when prompted).
+3. Type `programs` to open the library table.
+4. Use `programs info <slug>` (e.g., `programs info square-dance`) for a narrated breakdown of each step.
+5. Confirm you meet the listed **space** and **battery** requirements.
+6. Run it with `programs run <slug>` — output shows live progress (`[step/total] description`).
+7. Land safely (the routines include `takeoff` and `land`, but keep the emergency command handy).
+
+#### Library snapshot
+
+| Slug | Routine | Space Needed | Min Battery | Highlights |
+|------|---------|--------------|-------------|------------|
+| `square-dance` | Square Dance | 3 m bubble | 50% | 1 m square trace + mirrored flips |
+| `spiral-climb` | Spiral Climb | 3.5 m bubble | 40% | Gentle spiral ascent with hover panorama |
+| `zigzag-dash` | Zig-Zag Dash | 4 m bubble | 35% | Agile lateral dodges with quick rotations |
+| `selfie-orbit` | Selfie Orbit | 5 m bubble | 45% | Camera-friendly orbit plus forward flip bow |
+
+Full descriptions live in `programs info <slug>` and [Docs/Manual.md](Docs/Manual.md).
+
+#### Ready-to-upload Python snippet
+
+```python
+from tello_diagnostics import (
+    FlightProgramLibrary,
+    FlightProgramRunner,
+    TelloManualInterface,
+)
+
+interface = TelloManualInterface()
+if interface.connect():
+    program = interface.program_library.get_program("selfie-orbit")
+
+    def status(msg: str) -> None:
+        print(f"[GUI] {msg}")
+
+    interface.program_runner.execute(interface.tello, program, status)
+    interface.disconnect()
+```
+
+This snippet mirrors the GUI workflow: connect, fetch a routine, stream progress updates, and disconnect responsibly.
 
 ## 📊 Available Telemetry Data
 
@@ -236,6 +283,14 @@ pre-commit run --all-files
 - [Manual](Docs/Manual.md) - Complete feature documentation
 - [Changelog](CHANGELOG.md) - Version history
 - [Contributing](CONTRIBUTING.md) - Contribution guidelines
+
+## 🎓 Future Program Ideas
+
+- **Mission pad puzzles** – detect markers, trigger different routines for STEM challenges.
+- **Sensor-driven storytelling** – live-map telemetry to LED strips or classroom dashboards.
+- **Lesson-ready notebooks** – pair each program with physics/math worksheets using logged data.
+- **Collaborative choreography** – create synchronized routines for multiple drones using shared clocks.
+- **Computer-vision tie-ins** – extend selfie-orbit to auto-track subjects with OpenCV overlays.
 
 ## 🔒 Security
 

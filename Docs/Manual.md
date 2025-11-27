@@ -264,6 +264,83 @@ Disconnected from Tello.
 
 ---
 
+## Program Library (Ready-to-Upload Routines)
+
+### Overview
+
+The manual interface doubles as a lightweight GUI for curated “press play” programs. Each routine bundles validated moves, pauses, and automatic takeoff/landing so you can run showcases or classroom demos without writing code on the spot.
+
+### Quick Steps
+
+1. Launch `tello-manual` and connect to the drone.
+2. Type `programs` to open the catalog table (slug, title, required space, battery, ETA).
+3. Inspect details with `programs info <slug>` to preview every move and hold period.
+4. Confirm the space is clear and the battery exceeds the shown threshold.
+5. Run it with `programs run <slug>` and watch the live `[current/total]` progress lines.
+
+### Catalog Snapshot
+
+| Slug | Title | Objective | Space (m) | Min Battery | ETA (s) |
+|------|-------|-----------|-----------|-------------|---------|
+| `square-dance` | Square Dance | 1 m box trace with mirrored flips | 3.0 | 50% | 55 |
+| `spiral-climb` | Spiral Climb | Spiral ascent + panorama hover | 3.5 | 40% | 60 |
+| `zigzag-dash` | Zig-Zag Dash | Agile dodges with resets | 4.0 | 35% | 45 |
+| `selfie-orbit` | Selfie Orbit | Camera-friendly orbit + flip bow | 5.0 | 45% | 75 |
+
+### Step-by-Step Example (`programs info square-dance`)
+
+```
+Square Dance (square-dance)
+----------------------------------------
+- Recommended space: 3.0 m clear bubble
+- Minimum battery: 50%
+- Estimated duration: 55s
+
+Steps:
+01. takeoff () - Smooth takeoff + hold 2.0s
+02. move_forward (80,) - Forward leg + hold 1.0s
+03. move_right (80,) - Right leg + hold 1.0s
+04. move_back (80,) - Backwards leg + hold 1.0s
+05. move_left (80,) - Left leg to close square + hold 1.0s
+06. flip ('l',) - Left flip celebration + hold 1.5s
+07. flip ('r',) - Right flip celebration + hold 1.5s
+08. land () - Autoland
+```
+
+### Ready-to-Upload Script (API Usage)
+
+```python
+from tello_diagnostics import (
+    FlightProgramLibrary,
+    FlightProgramRunner,
+    TelloManualInterface,
+)
+
+interface = TelloManualInterface()
+if not interface.connect():
+    raise SystemExit("Unable to reach the Tello Wi-Fi")
+
+library = FlightProgramLibrary()
+program = library.get_program("zigzag-dash")
+
+def status(message: str) -> None:
+    print(f"[Program] {message}")
+
+try:
+    FlightProgramRunner().execute(interface.tello, program, status)
+finally:
+    interface.disconnect()
+```
+
+### Safety Checklist
+
+- Respect the recommended clearance bubble before launching.
+- Meet or exceed the listed battery requirement (flips need ≥ 50%).
+- Keep the `emergency` command ready in case people or obstacles enter the area.
+- Avoid running routines outdoors in gusty wind; stick to calm indoor spaces.
+
+---
+
 ## Python API
 
 ### Using as a Library
